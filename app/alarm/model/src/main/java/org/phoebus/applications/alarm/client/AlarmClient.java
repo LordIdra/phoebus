@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.record.TimestampType;
 import org.phoebus.applications.alarm.AlarmSystem;
 import org.phoebus.applications.alarm.model.AlarmTreeItem;
@@ -25,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -115,10 +117,7 @@ public class AlarmClient {
      */
     private long last_state_update = 0;
 
-    /**
-     * Timeout, not seen any messages from server?
-     */
-    private volatile boolean has_timed_out = false;
+    private volatile AlarmClientStatus status = AlarmClientStatus.CONNECTING;
 
     /**
      * @param server                Kafka Server host:port
@@ -572,23 +571,44 @@ public class AlarmClient {
     /**
      * @return <code>true</code> if connected to server, else updates have timed out
      */
-    public boolean isServerAlive() {
-        return !has_timed_out;
+    public AlarmClientStatus getStatus() {
+        return status;
     }
 
     /**
      * Check if there have been any messages from server
      */
     private void checkServerState() {
+        AlarmClientStatus newStatus = AlarmClientStatus.CONNECTED;
+
+        // Check if we are still receiving messages from the topic
+        // TODO this should not be checked after initial loading complete
+        for (final TopicPartition partition : consumer.assignment()) {
+            final OptionalLong lag = consumer.currentLag(partition);
+            if (lag.isPresent() && lag.getAsLong() != 0) {
+                newStatus = AlarmClientStatus.LOADING;
+                break;
+            }
+        }
+
+        // Check alarmserver connectivity
+        // Alarmserver sends a heartbeat state update every so often to make this check work
         final long now = System.currentTimeMillis();
         if (now - last_state_update > AlarmSystem.idle_timeout_ms * 3) {
-            if (!has_timed_out) {
-                has_timed_out = true;
-                for (final AlarmClientListener listener : listeners)
-                    listener.serverStateChanged(false);
-            }
-        } else if (has_timed_out) {
-            has_timed_out = false;
+            newStatus = AlarmClientStatus.ALARMSERVER_NOT_RUNNING;
+        }
+
+        // Check Kafka connectivity
+        // Same approach used in alarm server at time of writing; listTopics will time out if
+        // the server is down
+        try {
+            consumer.listTopics(Duration.ofSeconds(1));
+        } catch (final Throwable ex) {
+            newStatus = AlarmClientStatus.KAFKA_CONNECTION_TIMED_OUT;
+        }
+
+        if (newStatus != status) {
+            status = newStatus;
             for (final AlarmClientListener listener : listeners)
                 listener.serverStateChanged(true);
         }
