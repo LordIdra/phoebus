@@ -222,13 +222,17 @@ public class AutocompleteMenu
 
     private void lookup(final TextInputControl field)
     {
-        final String text = field.getText();
+        final String text = getCompletionText(field);
 
         synchronized (results)
         {
             results.clear();
         }
         proposal_service.lookup(text, (name, priority, proposals) -> handleLookupResult(field, text, name, priority, proposals));
+    }
+
+    protected String getCompletionText(final TextInputControl field) {
+        return field.getText();
     }
 
     /** Latest list of menu items to show.
@@ -296,19 +300,20 @@ public class AutocompleteMenu
             markup.getChildren().add(match);
         }
 
-        return new AutocompleteItem(markup, () ->
-        {
-            final String value = proposal.apply(text);
-            field.setText(value);
-            field.positionCaret(value.length());
-            invokeAction(field);
-        });
+        return new AutocompleteItem(markup, () -> autocompleteAction(field, text, proposal));
+    }
+
+    protected void autocompleteAction(final TextInputControl field, final String text, final Proposal proposal) {
+        final String value = proposal.apply(text);
+        field.setText(value);
+        field.positionCaret(value.length());
+        invokeAction(field);
     }
 
     /** Try to invoke 'onAction' handler
      *  @param field Potential {@link TextField}
      */
-    private void invokeAction(final TextInputControl field)
+    protected void invokeAction(final TextInputControl field)
     {
         if (field instanceof TextField)
         {
