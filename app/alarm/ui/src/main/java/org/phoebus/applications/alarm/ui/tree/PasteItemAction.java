@@ -22,7 +22,6 @@ import org.phoebus.ui.javafx.ImageCache;
 import java.text.MessageFormat;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @SuppressWarnings("nls")
@@ -94,10 +93,10 @@ public class PasteItemAction extends MenuItem
             // Get final name
             final String finalName;
             if (needsRename) {
-                final RenameDialog renameDialog = new RenameDialog(model, parent, item);
-                renameDialog.setHeaderText(MessageFormat.format(Messages.enterNewName, parent.getName(), item.getName()));
-                DialogHelper.positionDialog(renameDialog, node, -100, -50);
-                final Optional<String> name = renameDialog.showAndWait();
+                final NameDialog nameDialog = new NameDialog(model, parent, item);
+                nameDialog.setHeaderText(MessageFormat.format(Messages.enterNewName, parent.getName(), item.getName()));
+                DialogHelper.positionDialog(nameDialog, node, -100, -50);
+                final Optional<String> name = nameDialog.showAndWait();
                 if (!name.isPresent()) {
                     return;
                 }

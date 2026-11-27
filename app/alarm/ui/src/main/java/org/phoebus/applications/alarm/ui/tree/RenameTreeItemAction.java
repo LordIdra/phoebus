@@ -42,7 +42,7 @@ class RenameTreeItemAction extends MenuItem
 		setOnAction(event ->
 		{
 			// Prompt for new name
-			final RenameDialog dialog = new RenameDialog(model, item.getParent(), item);
+			final NameDialog dialog = new NameDialog(model, item.getParent(), item);
 			dialog.setHeaderText(Messages.enterNewName);
 			DialogHelper.positionDialog(dialog, node, -100, -50);
 			final String new_name = dialog.showAndWait().orElse(null);

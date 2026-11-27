@@ -722,23 +722,24 @@ public class AlarmTreeView extends BorderPane implements AlarmClientListener
                 manageMenu.setGraphic(ImageCache.getImageView(AlarmUI.class, "/icons/edit.png"));
                 final ObservableList<MenuItem> manageMenuItems = manageMenu.getItems();
 
-                if (selection.size() <= 0)
+                if (selection.size() <= 0) {
                     // Add first item to empty config
-                    manageMenuItems.add(new AddComponentAction(tree_view, model, model.getRoot()));
+                    manageMenuItems.add(new CreateNodeAction(tree_view, model, model.getRoot()));
+                    manageMenuItems.add(new CreateAlarmsAction(tree_view, model, model.getRoot()));
+                }
                 else if (selection.size() == 1)
                 {
                     final AlarmTreeItem<?> item = selection.get(0);
+                    final AlarmTreeItem<?> parent = item instanceof AlarmClientNode ? item : item.getParent();
+                    final TreeItem<AlarmTreeItem<?>> viewParent = path2view.get(parent.getPathName());
+
+                    manageMenuItems.add(new CreateNodeAction(tree_view, model, parent));
+                    manageMenuItems.add(new CreateAlarmsAction(tree_view, model, parent));
                     manageMenuItems.add(new ConfigureComponentAction(tree_view, model, item));
 
                     manageMenuItems.add(new CopyItemAction(tree_view, clipboard, isClipboardCut, item));
                     manageMenuItems.add(new CutItemAction(tree_view, clipboard, isClipboardCut, item));
-
-                    final AlarmTreeItem<?> parent = item instanceof AlarmClientNode ? item : item.getParent();
-                    final TreeItem<AlarmTreeItem<?>> viewParent = path2view.get(parent.getPathName());
                     manageMenuItems.add(new PasteItemAction(tree_view, model, viewParent, clipboard, isClipboardCut.get()));
-
-                    if (item instanceof AlarmClientNode)
-                        manageMenuItems.add(new AddComponentAction(tree_view, model, item));
 
                     manageMenuItems.add(new RenameTreeItemAction(tree_view, model, item));
 

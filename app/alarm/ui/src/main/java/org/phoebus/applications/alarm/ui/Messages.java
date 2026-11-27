@@ -24,6 +24,13 @@ public class Messages
     public static String configure;
     public static String cutPasteAcrossConfigs;
     public static String cutPasteIntoChild;
+    public static String createAlarmsDialogTitle;
+    public static String createAlarmsDialogHint;
+    public static String createAlarmFailed;
+    public static String creatingAlarms;
+    public static String createNodeDialogTitle;
+    public static String createNodeDialogHeader;
+    public static String createNodeFailed;
     public static String delayTooltip0;
     public static String delayTooltip1;
     public static String delayTooltip2;
@@ -57,6 +64,7 @@ public class Messages
     public static String pasteItemFailed;
     public static String promptTitle;
     public static String pvAlreadyExists;
+    public static String pvEnteredMoreThanOnce;
     public static String renameItem;
     public static String renameDialogLabel;
     public static String renameDialogTitle;
@@ -64,6 +72,7 @@ public class Messages
     public static String renameItemFailed;
     public static String search;
     public static String searchByPv;
+    public static String specificPvAlreadyExists;
     public static String totalPVs;
     public static String unacknowledgeFailed;
     public static String withEnableDate;
